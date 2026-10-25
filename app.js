@@ -95,7 +95,7 @@ function render() {
   showScreen("home");
 
   // Yearly card
-  $("year-label").textContent = s.thisYear;
+  $("year-label").textContent = `${s.thisYear}/${Number(s.thisYear) + 1}`;   // e.g. "2026/2027"
   document.querySelectorAll(".year-label").forEach((el) => (el.textContent = s.thisYear));
   $("year-saved").textContent = money(s.yearSaved);
   $("year-of").textContent = `of ${money(data.settings.yearlyGoal)} · ${pct(s.yearPct)}`;
