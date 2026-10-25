@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en-CA">
+<head>
+  <meta charset="utf-8">
+  <!-- Fit the phone screen instead of showing a zoomed-out desktop page -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- Let iPhone run it full-screen when added to the home screen -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Savings">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <title>Savings Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ========== Screen A: Settings ========== -->
+  <main id="settings-screen" hidden>
+    <h1>Settings</h1>
+    <form id="settings-form">
+      <label>Yearly savings goal
+        <div class="money-input"><span>$</span>
+          <input name="yearlyGoal" type="number" inputmode="decimal" min="1" step="0.01" required placeholder="40000">
+        </div>
+      </label>
+      <label>Savings rate goal
+        <div class="money-input"><input name="rateGoal" type="number" inputmode="decimal" min="1" max="100" step="0.1" required placeholder="65"><span>%</span></div>
+      </label>
+      <label>Starting monthly take-home income
+        <div class="money-input"><span>$</span>
+          <input name="startingIncome" type="number" inputmode="decimal" min="1" step="0.01" required placeholder="5500">
+        </div>
+        <small>Used until you enter a month's actual income.</small>
+      </label>
+      <button type="submit" class="primary">Save</button>
+      <button type="button" id="settings-cancel" class="link">Cancel</button>
+    </form>
+  </main>
+
+  <!-- ========== Screen B: Home ========== -->
+  <main id="home-screen" hidden>
+    <header class="top">
+      <h1><span id="year-label"></span> Savings</h1>
+      <button id="open-settings" class="icon" aria-label="Settings">⚙</button>
+    </header>
+
+    <!-- Yearly progress -->
+    <section class="card">
+      <div class="big" id="year-saved"></div>
+      <div class="muted" id="year-of"></div>
+      <div class="bar"><div id="year-bar"></div></div>
+      <div id="year-togo"></div>
+    </section>
+
+    <!-- Month + savings rate, side by side -->
+    <div class="pair">
+      <section class="card">
+        <h2 id="month-label"></h2>
+        <div class="medium" id="month-saved"></div>
+        <div class="muted" id="month-count"></div>
+      </section>
+      <section class="card">
+        <h2>Savings rate</h2>
+        <div class="medium" id="rate-now"></div>
+        <div class="muted" id="rate-goal"></div>
+        <div class="bar"><div id="rate-bar"></div></div>
+        <div class="small" id="rate-togo"></div>
+        <button id="edit-income" class="income-line"></button>
+      </section>
+    </div>
+
+    <!-- Log a deposit -->
+    <section class="card">
+      <h2>Log a deposit</h2>
+      <form id="deposit-form">
+        <div class="money-input"><span>$</span>
+          <input id="deposit-amount" name="amount" type="number" inputmode="decimal" min="0.01" step="0.01" required placeholder="Amount">
+        </div>
+        <!-- One radio button per account, styled as tap-able pills by style.css -->
+        <div class="pills" id="account-pills"></div>
+        <label class="date-row">Date <input id="deposit-date" name="date" type="date" required></label>
+        <button type="submit" class="primary">Add</button>
+      </form>
+    </section>
+
+    <!-- Breakdown by account -->
+    <section class="card">
+      <h2>By account (<span class="year-label"></span>)</h2>
+      <ul id="by-account" class="rows"></ul>
+    </section>
+
+    <!-- History, grouped by month -->
+    <section class="card">
+      <h2>History</h2>
+      <div id="history"></div>
+    </section>
+  </main>
+
+  <!-- Pop-up box for entering this month's income -->
+  <dialog id="income-dialog">
+    <form method="dialog" id="income-form">
+      <h2 id="income-title"></h2>
+      <div class="money-input"><span>$</span>
+        <input id="income-amount" type="number" inputmode="decimal" min="1" step="0.01" required>
+      </div>
+      <button value="save" class="primary">Save</button>
+      <button value="cancel" formnovalidate class="link">Cancel</button>
+    </form>
+  </dialog>
+
+  <div id="toast" role="status"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
