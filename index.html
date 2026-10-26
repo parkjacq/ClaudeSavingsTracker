@@ -10,7 +10,7 @@
   <meta name="theme-color" content="#0f766e">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <title>Savings Tracker</title>
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
@@ -18,12 +18,12 @@
   <main id="settings-screen" hidden>
     <h1>Settings</h1>
     <form id="settings-form">
-      <label>Yearly savings goal
+      <label>Yearly savings goal (<span class="settings-year"></span>)
         <div class="money-input"><span>$</span>
           <input name="yearlyGoal" type="number" inputmode="decimal" min="1" step="0.01" required placeholder="40000">
         </div>
       </label>
-      <label>Savings rate goal
+      <label>Savings rate goal (<span class="settings-year"></span>)
         <div class="money-input"><input name="rateGoal" type="number" inputmode="decimal" min="1" max="100" step="0.1" required placeholder="65"><span>%</span></div>
       </label>
       <label>Starting monthly take-home income
@@ -34,7 +34,7 @@
       </label>
       <!-- Catch-up for starting mid-year: one box per account, built by app.js -->
       <fieldset class="starting">
-        <legend>Saved this year before using the app</legend>
+        <legend>Saved in <span class="settings-year"></span> before using the app</legend>
         <small>Your total per account from January 1 until you started logging here. Don't include deposits you log in the app. Leave blank if none.</small>
         <div id="starting-fields"></div>
       </fieldset>
@@ -105,21 +105,71 @@
     </section>
   </main>
 
-  <!-- ========== Screen C: Reports ========== -->
+  <!-- ========== Screen C: Reports menu ========== -->
   <main id="reports-screen" hidden>
     <header class="top">
       <button id="close-reports" class="back">‹ Back</button>
       <h1>Reports</h1>
       <span class="spacer"></span>
     </header>
+    <nav class="card menu">
+      <button id="open-summary">Year summary <span>›</span></button>
+      <button id="open-rates">Savings rate by month <span>›</span></button>
+    </nav>
+  </main>
 
-    <!-- Report: savings rate by month -->
+  <!-- ========== Screen C1: Year summary ========== -->
+  <main id="summary-screen" hidden>
+    <header class="top">
+      <button class="back to-reports">‹ Reports</button>
+      <h1>Year summary</h1>
+      <span class="spacer"></span>
+    </header>
+    <div class="year-switch">
+      <button id="summary-prev" class="icon" aria-label="Previous year">‹</button>
+      <span id="summary-year"></span>
+      <button id="summary-next" class="icon" aria-label="Next year">›</button>
+    </div>
+
+    <!-- Total saved vs that year's goal -->
+    <section class="card">
+      <div class="big" id="summary-saved"></div>
+      <div class="muted" id="summary-of"></div>
+      <div class="bar"><div id="summary-bar"></div></div>
+      <div id="summary-togo"></div>
+      <div class="muted small" id="summary-starting"></div>
+    </section>
+
+    <section class="card">
+      <h2>Savings rate</h2>
+      <div id="summary-rate"></div>
+    </section>
+
+    <section class="card">
+      <h2>By account</h2>
+      <ul id="summary-accounts" class="rows"></ul>
+    </section>
+
+    <!-- That year's deposits by month; each month expands -->
+    <section class="card">
+      <h2>Deposits</h2>
+      <div id="summary-deposits"></div>
+    </section>
+  </main>
+
+  <!-- ========== Screen C2: Savings rate by month ========== -->
+  <main id="rates-screen" hidden>
+    <header class="top">
+      <button class="back to-reports">‹ Reports</button>
+      <h1>Savings rate</h1>
+      <span class="spacer"></span>
+    </header>
     <section class="card">
       <h2>Savings rate by month</h2>
       <div class="year-switch">
-        <button id="prev-year" class="icon" aria-label="Previous year">‹</button>
-        <span id="report-year"></span>
-        <button id="next-year" class="icon" aria-label="Next year">›</button>
+        <button id="rates-prev" class="icon" aria-label="Previous year">‹</button>
+        <span id="rates-year"></span>
+        <button id="rates-next" class="icon" aria-label="Next year">›</button>
       </div>
       <!-- Bars are built by app.js -->
       <div class="chart" id="rate-chart"></div>
@@ -129,7 +179,7 @@
     </section>
   </main>
 
-  <!-- Pop-up box for entering this month's income -->
+  <!-- Pop-up box for entering a month's income -->
   <dialog id="income-dialog">
     <form method="dialog" id="income-form">
       <h2 id="income-title"></h2>
@@ -143,6 +193,6 @@
 
   <div id="toast" role="status"></div>
 
-  <script src="app.js?v=4"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>

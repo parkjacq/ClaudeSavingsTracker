@@ -257,3 +257,29 @@ dialog .primary { margin-top: 16px; }
 .chart-bar.hit { background: var(--good); }
 .chart-month { font-size: .75rem; font-weight: 700; margin-top: 4px; }
 .chart-value { font-size: .65rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* Reports menu */
+.menu { padding: 0; overflow: hidden; }
+.menu button {
+  display: flex; justify-content: space-between; align-items: center; width: 100%;
+  padding: 16px; border: 0; border-bottom: 1px solid var(--line);
+  background: none; color: var(--text); font-weight: 600; text-align: left;
+}
+.menu button:last-child { border-bottom: 0; }
+.menu button span { color: var(--muted); font-size: 1.3rem; }
+
+/* Year summary: months that expand to show their deposits */
+#summary-deposits details { border-bottom: 1px solid var(--line); }
+#summary-deposits details:last-child { border-bottom: 0; }
+#summary-deposits summary {
+  /* columns: ▸ arrow, month, amount, rate */
+  display: grid; grid-template-columns: 1rem 1fr auto 3rem; gap: 8px; align-items: center;
+  padding: 10px 0; cursor: pointer; list-style: none; font-weight: 600;
+}
+#summary-deposits summary::-webkit-details-marker { display: none; }
+#summary-deposits summary::before { content: "▸ "; color: var(--muted); }
+#summary-deposits details[open] summary::before { content: "▾ "; }
+#summary-deposits summary span:first-child { display: inline; }
+#summary-deposits summary .small { text-align: right; margin: 0; }
+#summary-deposits .income-line { margin: 0 0 4px; border-top: 0; padding-top: 0; }
+#summary-deposits .history-row:last-child { border-bottom: 0; }
