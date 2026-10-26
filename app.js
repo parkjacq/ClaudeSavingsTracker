@@ -1,5 +1,5 @@
 // Savings Tracker — all app behaviour lives here.
-// Reading order: 1) data  2) calculations  3) drawing the screen  4) reacting to taps  5) reports.
+// Reading order: 1) data  2) calculations  3) drawing the screen  4) reacting to taps  5) reports  6) backup.
 
 const ACCOUNTS = ["TFSA", "RRSP", "FHSA", "Taxable", "Savings"];
 const STORAGE_KEY = "savings-tracker-v1";
@@ -12,9 +12,9 @@ let data = load();
 function load() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (saved) return upgrade({ income: {}, deposits: [], lastAccount: "TFSA", goals: {}, starting: {}, ...saved });
+    if (saved) return upgrade({ income: {}, deposits: [], lastAccount: "TFSA", goals: {}, starting: {}, backup: {}, ...saved });
   } catch (e) { /* storage unavailable or corrupted: start fresh */ }
-  return { settings: null, goals: {}, income: {}, deposits: [], lastAccount: "TFSA", starting: {} };
+  return { settings: null, goals: {}, income: {}, deposits: [], lastAccount: "TFSA", starting: {}, backup: {} };
 }
 
 // Older versions kept one set of goals and one year of starting balances.
@@ -31,7 +31,9 @@ function upgrade(d) {
   return d;
 }
 
-function save() {
+// changed = false for bookkeeping saves (backup dates, upgrades) that shouldn't count as new data to back up
+function save(changed = true) {
+  if (changed) data.backup.changed = Date.now();
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
   catch (e) { toast("Couldn't save on this device"); }
 }
@@ -228,6 +230,7 @@ function render() {
 
   $("by-account").innerHTML = accountRows(s.byAccount);
   renderHistory(s);
+  renderBanner();
 }
 
 // Home History: the current year only. Earlier years are in their Year summary.
@@ -311,6 +314,8 @@ function openSettings() {
   const starting = startingFor(year);
   ACCOUNTS.forEach((a) => (form[`starting-${a}`].value = starting[a] || ""));
   $("settings-cancel").hidden = !data.settings;   // nothing to go back to on first run
+  $("backup-button").disabled = !data.settings;   // nothing to back up yet, but Restore works on first run
+  renderLastBackup();
   showScreen("settings");
 }
 
@@ -543,9 +548,109 @@ $("rate-chart").addEventListener("click", (e) => {
   renderRates();
 });
 
+// ---------- 6. Backup and restore ----------
+
+const DAY = 24 * 60 * 60 * 1000;
+const BACKUP_FIELDS = ["settings", "goals", "income", "starting", "deposits", "lastAccount"];
+const longDate = (time) => new Date(time).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" });
+
+const hasData = () =>
+  data.deposits.length > 0 || Object.values(data.starting).some((amounts) => Object.keys(amounts).length > 0);
+
+// Remind when there's data and either no backup yet, or the last one is 30+ days old with changes since — unless snoozed
+function backupDue() {
+  const b = data.backup;
+  const now = Date.now();
+  if (!hasData() || (b.snoozeUntil && now < b.snoozeUntil)) return false;
+  if (!b.last) return true;
+  return now - b.last > 30 * DAY && b.changed > b.last;
+}
+
+function renderBanner() {
+  const due = backupDue();
+  $("backup-banner").hidden = !due;
+  if (due) {
+    $("backup-banner-text").textContent = data.backup.last
+      ? `Last backup: ${Math.floor((Date.now() - data.backup.last) / DAY)} days ago`
+      : "You haven't backed up yet";
+  }
+}
+
+function renderLastBackup() {
+  $("last-backup").textContent = `Last backup: ${data.backup.last ? longDate(data.backup.last) : "Never"}`;
+}
+
+// One file with everything. iPhone: Share sheet → Save to Files. Elsewhere: a normal download.
+async function backUp() {
+  const contents = {};
+  BACKUP_FIELDS.forEach((key) => (contents[key] = data[key]));
+  const json = JSON.stringify({ app: "savings-tracker", version: 1, savedAt: new Date().toISOString(), data: contents }, null, 2);
+  const name = `savings-backup-${todayString()}.json`;
+  const file = new File([json], name, { type: "application/json" });
+  try {
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file] });
+    } else {
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(file);
+      link.download = name;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    }
+  } catch (e) {
+    if (e.name !== "AbortError") toast("Couldn't create the backup");
+    return;   // Share sheet closed or failed: don't count it as a backup
+  }
+  data.backup.last = Date.now();
+  data.backup.snoozeUntil = null;
+  save(false);
+  renderLastBackup();
+  renderBanner();
+  toast("Backup created");
+}
+
+$("backup-button").addEventListener("click", backUp);
+$("banner-backup").addEventListener("click", backUp);
+$("banner-later").addEventListener("click", () => {
+  data.backup.snoozeUntil = Date.now() + 7 * DAY;
+  save(false);
+  renderBanner();
+});
+
+// Restore: check the file, show what's in it, and replace everything only after the user confirms
+$("restore-button").addEventListener("click", () => $("restore-file").click());
+$("restore-file").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  e.target.value = "";   // so choosing the same file again still works
+  if (!file) return;
+
+  let backup = null;
+  try { backup = JSON.parse(await file.text()); } catch (err) { /* not JSON: refused below */ }
+  const d = backup && backup.app === "savings-tracker" ? backup.data : null;
+  if (!d || !d.settings || !d.goals || !Array.isArray(d.deposits)) {
+    alert("This file isn't a Savings Tracker backup. Nothing was changed.");
+    return;
+  }
+
+  const years = [...new Set([...Object.keys(d.goals), ...d.deposits.map((x) => yearOf(x.date))])].sort();
+  const span = years.length > 1 ? `${years[0]}–${years[years.length - 1]}` : years[0];
+  const savedAt = Date.parse(backup.savedAt);
+  const message = `Backup from ${longDate(savedAt)}: ${span}, ${d.deposits.length} deposit${d.deposits.length === 1 ? "" : "s"}.\n\n` +
+    "This replaces all data on this phone. Continue?";
+  if (!confirm(message)) return;
+
+  // The restored data matches the file, so the file counts as the latest backup
+  data = upgrade({ income: {}, deposits: [], lastAccount: "TFSA", goals: {}, starting: {}, ...d,
+    backup: { last: savedAt, changed: savedAt, snoozeUntil: null } });
+  save(false);
+  resetDepositForm();
+  render();
+  toast("Backup restored");
+});
+
 // ---------- Start ----------
 buildPills();
 buildStartingFields();
 resetDepositForm();
-if (data.settings) save();   // store any upgrade() changes straight away
+if (data.settings) save(false);   // store any upgrade() changes straight away
 render();

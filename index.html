@@ -10,7 +10,7 @@
   <meta name="theme-color" content="#0f766e">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <title>Savings Tracker</title>
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 
@@ -41,6 +41,15 @@
       <button type="submit" class="primary">Save</button>
       <button type="button" id="settings-cancel" class="link">Cancel</button>
     </form>
+
+    <!-- Backup and restore: outside the form, so it works on first run without filling in the fields -->
+    <section class="card">
+      <h2>Your data</h2>
+      <p class="muted small" id="last-backup"></p>
+      <button type="button" id="backup-button" class="primary">Back up</button>
+      <button type="button" id="restore-button" class="secondary">Restore from backup</button>
+      <input type="file" id="restore-file" accept=".json,application/json" hidden>
+    </section>
   </main>
 
   <!-- ========== Screen B: Home ========== -->
@@ -52,6 +61,15 @@
         <button id="open-settings" class="icon" aria-label="Settings">⚙</button>
       </div>
     </header>
+
+    <!-- Backup reminder, shown only when a backup is due -->
+    <div id="backup-banner" class="banner" hidden>
+      <span id="backup-banner-text"></span>
+      <div>
+        <button id="banner-backup" class="banner-primary">Back up</button>
+        <button id="banner-later" class="link">Later</button>
+      </div>
+    </div>
 
     <!-- Yearly progress -->
     <section class="card">
@@ -193,6 +211,6 @@
 
   <div id="toast" role="status"></div>
 
-  <script src="app.js?v=5"></script>
+  <script src="app.js?v=6"></script>
 </body>
 </html>
