@@ -10,7 +10,7 @@
   <meta name="theme-color" content="#0f766e">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <title>Savings Tracker</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 
@@ -32,6 +32,12 @@
         </div>
         <small>Used until you enter a month's actual income.</small>
       </label>
+      <!-- Catch-up for starting mid-year: one box per account, built by app.js -->
+      <fieldset class="starting">
+        <legend>Saved this year before using the app</legend>
+        <small>Your total per account from January 1 until you started logging here. Don't include deposits you log in the app. Leave blank if none.</small>
+        <div id="starting-fields"></div>
+      </fieldset>
       <button type="submit" class="primary">Save</button>
       <button type="button" id="settings-cancel" class="link">Cancel</button>
     </form>
@@ -41,7 +47,10 @@
   <main id="home-screen" hidden>
     <header class="top">
       <h1><span id="year-label"></span> Savings Tracker</h1>
-      <button id="open-settings" class="icon" aria-label="Settings">⚙</button>
+      <div>
+        <button id="open-reports" class="icon" aria-label="Reports">📊</button>
+        <button id="open-settings" class="icon" aria-label="Settings">⚙</button>
+      </div>
     </header>
 
     <!-- Yearly progress -->
@@ -96,6 +105,30 @@
     </section>
   </main>
 
+  <!-- ========== Screen C: Reports ========== -->
+  <main id="reports-screen" hidden>
+    <header class="top">
+      <button id="close-reports" class="back">‹ Back</button>
+      <h1>Reports</h1>
+      <span class="spacer"></span>
+    </header>
+
+    <!-- Report: savings rate by month -->
+    <section class="card">
+      <h2>Savings rate by month</h2>
+      <div class="year-switch">
+        <button id="prev-year" class="icon" aria-label="Previous year">‹</button>
+        <span id="report-year"></span>
+        <button id="next-year" class="icon" aria-label="Next year">›</button>
+      </div>
+      <!-- Bars are built by app.js -->
+      <div class="chart" id="rate-chart"></div>
+      <div class="chart-legend" id="chart-legend"></div>
+      <div id="report-summary"></div>
+      <div class="muted small" id="report-detail"></div>
+    </section>
+  </main>
+
   <!-- Pop-up box for entering this month's income -->
   <dialog id="income-dialog">
     <form method="dialog" id="income-form">
@@ -110,6 +143,6 @@
 
   <div id="toast" role="status"></div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>

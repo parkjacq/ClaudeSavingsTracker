@@ -9,6 +9,7 @@
   --accent-soft: #ccebe7;
   --good: #15803d;        /* green: goal reached */
   --danger: #b91c1c;
+  --bar-miss: #9ccfc8;    /* chart bars below goal: lighter, so goal hits stand out */
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -21,6 +22,7 @@
     --accent-soft: #134e48;
     --good: #4ade80;
     --danger: #f87171;
+    --bar-miss: #2f6660;
   }
 }
 
@@ -45,7 +47,8 @@ h1 { font-size: 1.5rem; margin: 0 0 16px; }
 h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 0 0 8px; }
 
 .top { display: flex; justify-content: space-between; align-items: center; }
-.top h1 { margin: 0; }
+.top h1 { margin: 0; font-size: 1.25rem; white-space: nowrap; }
+.top > div { display: flex; flex-shrink: 0; }   /* keep 📊 and ⚙ side by side */
 
 /* ---------- Cards ---------- */
 .card {
@@ -111,6 +114,17 @@ input {
 }
 .date-row input { width: auto; padding: 4px 0; font-size: 1rem; text-align: right; }
 
+/* Starting balances section in Settings */
+.starting { border: 0; padding: 0; margin: 0 0 20px; }
+.starting legend { font-weight: 600; padding: 0; }
+.starting small { display: block; color: var(--muted); margin: 4px 0 8px; }
+.starting-row {
+  display: grid; grid-template-columns: 5rem 1fr; align-items: center; gap: 8px;
+  font-weight: 400; margin: 0 0 8px;
+}
+.starting-row .money-input { margin-top: 0; }
+.starting-row input { padding: 8px 0; }
+
 /* Account pills: real radio buttons, visually hidden, with the label styled as a pill */
 .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .pills input { position: absolute; opacity: 0; pointer-events: none; }
@@ -167,7 +181,7 @@ button { font: inherit; cursor: pointer; }
 .month-head:first-child { margin-top: 0; }
 .history-row {
   display: grid;
-  grid-template-columns: 3.5rem 4.5rem 1fr auto;
+  grid-template-columns: 3.5rem 4.5rem 1fr 1.5rem;   /* fixed last column keeps amounts aligned */
   align-items: center;
   gap: 8px;
   padding: 8px 0;
@@ -198,3 +212,48 @@ dialog .primary { margin-top: 16px; }
   white-space: nowrap;
 }
 #toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- Reports ---------- */
+.back { border: 0; background: none; color: var(--accent); font-weight: 600; padding: 4px 0; width: 4.5rem; text-align: left; }
+.spacer { width: 4.5rem; }
+.year-switch { display: flex; justify-content: center; align-items: center; gap: 16px; font-weight: 700; margin-bottom: 8px; }
+.year-switch .icon:disabled { opacity: .25; cursor: default; }
+
+/* --plot is the bar area's height; --goal (0–1) places the dashed goal line inside it */
+.chart {
+  --plot: 150px;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  margin: 8px 0 12px;
+}
+.goal-line {
+  position: absolute; left: 0; right: 0;
+  top: calc(var(--plot) * (1 - var(--goal)));
+  border-top: 2px dashed var(--text);
+  opacity: .55;
+  pointer-events: none;
+  z-index: 1;   /* drawn over the bars so you can see how close each came */
+}
+.chart-legend { display: flex; gap: 14px; font-size: .75rem; color: var(--muted); margin: -4px 0 12px; }
+.chart-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.chart-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; }
+.chart-legend .dash { width: 14px; height: 0; border-top: 2px dashed var(--text); opacity: .55; border-radius: 0; }
+.chart-col {
+  display: flex; flex-direction: column; align-items: center;
+  border: 0; background: none; padding: 0; color: var(--text);
+  border-radius: 6px;
+}
+.chart-col:disabled { cursor: default; }
+.chart-col.selected { background: var(--accent-soft); }
+.chart-plot { position: relative; width: 100%; height: var(--plot); }
+.chart-bar {
+  position: absolute; bottom: 0; left: 18%; right: 18%;
+  min-height: 2px;
+  background: var(--bar-miss);
+  border-radius: 4px 4px 0 0;
+  transition: height .4s ease;
+}
+.chart-bar.hit { background: var(--good); }
+.chart-month { font-size: .75rem; font-weight: 700; margin-top: 4px; }
+.chart-value { font-size: .65rem; color: var(--muted); font-variant-numeric: tabular-nums; }
